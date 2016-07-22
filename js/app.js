@@ -15,7 +15,7 @@ var showQuestion = function(question) {
 	var date = new Date(1000*question.creation_date);
 	asked.text(date.toString());
 
-	// set the .viewed for question property in result
+	// set the viewed for question property in result
 	var viewed = result.find('.viewed');
 	viewed.text(question.view_count);
 
@@ -31,6 +31,18 @@ var showQuestion = function(question) {
 	return result;
 };
 
+var showAnswerer = function(answerer){
+	var result = $('.templates .people').clone();
+	var peopleText = result.find('.people-text a');
+	peopleText.attr('href', answerer.user.link);
+	peopleText.text(answerer.user.display_name);
+	var image = "<img src='" + answerer.user.profile_image + "' alt='" + answerer.user.display_name + "'>";
+    $(peopleText).append(image);
+	
+
+
+	return result;
+}
 
 // this function takes the results object from StackOverflow
 // and returns the number of results and tags to be appended to DOM
@@ -44,6 +56,7 @@ var showError = function(error){
 	var errorElem = $('.templates .error').clone();
 	var errorText = '<p>' + error + '</p>';
 	errorElem.append(errorText);
+	return errorElem;
 };
 
 // takes a string of semi-colon separated tags to be searched
@@ -61,7 +74,7 @@ var getUnanswered = function(tags) {
 	$.ajax({
 		url: "http://api.stackexchange.com/2.2/questions/unanswered",
 		data: request,
-		dataType: "jsonp",//use jsonp to avoid cross origin issues
+		dataType: "json",//use jsonp to avoid cross origin issues
 		type: "GET",
 	})
 	.done(function(result){ //this waits for the ajax to return with a succesful promise object
@@ -75,20 +88,74 @@ var getUnanswered = function(tags) {
 			$('.results').append(question);
 		});
 	})
-	.fail(function(jqXHR, error){ //this waits for the ajax to return with an error promise object
-		var errorElem = showError(error);
+	.fail(function(jqXHR, error, errorThrown){ //this waits for the ajax to return with an error promise object
+		var errorElem = showError(errorThrown);
+		console.log(errorThrown);
 		$('.search-results').append(errorElem);
 	});
 };
 
 
-$(document).ready( function() {
+// this function takes the results object from StackOverflow
+// and creates info about search results to be appended to DOM
+var showSearchResults = function(query, resultNum) {
+	var results = resultNum + ' results for <strong>' + query;
+	return results;
+};
+
+// takes error string and turns it into displayable DOM element
+var showError = function(error){
+	var errorElem = $('.templates .error').clone();
+	var errorText = '<p>' + error + '</p>';
+	errorElem.append(errorText);
+};
+
+
+//Get top Answerers
+
+
+var getInspiration = function(query) {
+
+	// the parameters we need to pass in our request to StackOverflow's API
+	var request = { 
+		site: 'stackoverflow'
+	};
+
+	$.ajax({
+		url: "http://api.stackexchange.com/2.2/tags/" + query + "/top-answerers/all_time",
+		data: request,
+		dataType: "json",
+		type: "GET"
+	})
+
+	.done(function(result){ 
+		var searchResults = showSearchResults(query, result.items.length);
+
+		$('.search-results').html(searchResults);
+		
+		$.each(result.items, function(i, item) {
+			var person = showAnswerer(item);
+			$('.results').append(person);
+		});
+	})
+	.fail(function(jqXHR, error){ 
+		var errorElem = showError(error);
+		$('.search-results').append(errorElem);
+	});
+};
+
 	$('.unanswered-getter').submit( function(e){
 		e.preventDefault();
-		// zero out results if previous search has run
 		$('.results').html('');
-		// get the value of the tags the user submitted
 		var tags = $(this).find("input[name='tags']").val();
 		getUnanswered(tags);
 	});
-});
+
+	$('.inspiration-getter').submit( function(e) {
+		e.preventDefault();
+		
+		$('.results').html('');
+		
+		var answerers = $(this).find("input[name='answerers']").val();
+		getInspiration(answerers);
+	});
