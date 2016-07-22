@@ -111,8 +111,7 @@ var showError = function(error){
 };
 
 
-//Get top Answerers
-
+//Get top Answerers with links to their StackOverflow profiles. 
 
 var getInspiration = function(query) {
 
