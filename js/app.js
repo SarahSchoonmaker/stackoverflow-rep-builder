@@ -74,7 +74,7 @@ var getUnanswered = function(tags) {
 	$.ajax({
 		url: "https://api.stackexchange.com/2.2/questions/unanswered",
 		data: request,
-		dataType: "json",//use jsonp to avoid cross origin issues
+		dataType: "jsonp",//use jsonp to avoid cross origin issues
 		type: "GET",
 	})
 	.done(function(result){ //this waits for the ajax to return with a succesful promise object
@@ -123,7 +123,7 @@ var getInspiration = function(query) {
 	$.ajax({
 		url: "https://api.stackexchange.com/2.2/tags/" + query + "/top-answerers/all_time",
 		data: request,
-		dataType: "json",
+		dataType: "jsonp",
 		type: "GET"
 	})
 
